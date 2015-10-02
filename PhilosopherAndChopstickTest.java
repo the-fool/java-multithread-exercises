@@ -21,6 +21,7 @@ class ChopStick {
 }
 
 class Philosopher implements Runnable {
+	private static final int SPEED_FACTOR = 2;
 	private ChopStick left, right;
 	private int id;
 	private Random r = new Random();
@@ -39,11 +40,11 @@ class Philosopher implements Runnable {
 	}
 
 	private void think() throws InterruptedException {
-		TimeUnit.MILLISECONDS.sleep(r.nextInt(sagacity * 200));
+		TimeUnit.MILLISECONDS.sleep(r.nextInt(sagacity * SPEED_FACTOR));
 	}
 
 	private void eat() throws InterruptedException {
-		TimeUnit.MILLISECONDS.sleep(r.nextInt(appetite * 200));
+		TimeUnit.MILLISECONDS.sleep(r.nextInt(appetite * SPEED_FACTOR));
 	}
 
 	public void run() {
@@ -76,7 +77,7 @@ public class PhilosopherAndChopstickTest {
 		}
 		// feed 5 philosophers
 		for (int i=0; i < sticks.length; i++) {
-			exec.execute(new Philosopher(sticks[i], sticks[i+1], i + 1));
+			exec.execute(new Philosopher(sticks[i], sticks[(i+1) % sticks.length ], i + 1));
 		}
 	}
 
