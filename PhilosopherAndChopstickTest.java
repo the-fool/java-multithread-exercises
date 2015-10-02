@@ -69,16 +69,18 @@ class Philosopher implements Runnable {
 public class PhilosopherAndChopstickTest {
 
 	public static void main(String[] args) {
-		ExecutorService exec = Executors.newFixedThreadPool(5);
+		final int N = 5;
+		ExecutorService exec = Executors.newFixedThreadPool(N);
 		// get 5 sticks
-		ChopStick[] sticks = new ChopStick[5];
+		ChopStick[] sticks = new ChopStick[N];
 		for (int i=0; i < sticks.length; i++) {
 			sticks[i] = new ChopStick();
 		}
 		// feed 5 philosophers
-		for (int i=0; i < sticks.length; i++) {
-			exec.execute(new Philosopher(sticks[i], sticks[(i+1) % sticks.length ], i + 1));
+		for (int i=0; i < sticks.length - 1; i++) {
+			exec.execute(new Philosopher(sticks[i], sticks[i+1], i + 1));
 		}
+		exec.execute(new Philosopher(sticks[0], sticks[sticks.length - 1], sticks.length));
 	}
 
 }
