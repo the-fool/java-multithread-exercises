@@ -21,11 +21,14 @@ class ChopStick {
 }
 
 class Philosopher implements Runnable {
-	private static final int SPEED_FACTOR = 2;
+	private static final int SPEED_FACTOR = 200;
 	private ChopStick left, right;
 	private int id;
 	private Random r = new Random();
 	private int sagacity, appetite;
+	// if nourishment hits 0, then philosopher starves to death
+	private volatile int nourishment;
+	ExecutorService exec = Executors.newFixedThreadPool(1);
 
 	public Philosopher(ChopStick left, ChopStick right, int id) {
 		this.id = id;
@@ -33,6 +36,8 @@ class Philosopher implements Runnable {
 		this.right = right;
 		sagacity = r.nextInt(3) + 1;
 		appetite = r.nextInt(3) + 1;
+		nourishment = 5;
+		exec.execute(new Nourishedness());
 	}
 
 	public String toString() {
@@ -57,11 +62,32 @@ class Philosopher implements Runnable {
 				right.pickUp();
 				System.out.println(this + "has 2 sticks, eating");
 				eat();
+				nourishment++;
+				if (nourishment > 0)
+					System.out.println(this + "satisfied level: " + nourishment);
+				else {
+					System.out.println(this + "STARVING!!! My level is " + nourishment);
+				}
+				 
 				left.putDown();
 				right.putDown();
 			}
 		} catch (InterruptedException e) {
 			e.printStackTrace();
+		}
+	}
+	private class Nourishedness implements Runnable {
+		
+		public void run() {
+			try {
+				while (!Thread.interrupted()) {
+					// with multiplicative at 4, it's okay, but at 3, philosophers tend to starve
+				TimeUnit.MILLISECONDS.sleep(SPEED_FACTOR * 4);
+				nourishment--;
+				}
+			} catch (InterruptedException e) {
+				e.printStackTrace();
+			}
 		}
 	}
 }
