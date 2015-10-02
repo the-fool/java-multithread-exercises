@@ -1,17 +1,19 @@
 package philosopherAndChopstick;
 
 import java.util.Random;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 
-class DiningObject {
+class ChopStick {
 	private boolean held;
-	
+
 	synchronized void pickUp() throws InterruptedException {
 		while (held)
 			wait();
 		held = true;
 	}
-	
+
 	synchronized void putDown() throws InterruptedException {
 		held = false;
 		notifyAll();
@@ -19,43 +21,63 @@ class DiningObject {
 }
 
 class Philosopher implements Runnable {
-	private DiningObject[] pileOfSticks;
+	private ChopStick left, right;
 	private int id;
 	private Random r = new Random();
-	private int sagacity;
-	
-	public Philosopher(DiningObject[] pileOfSticks, int id) {
+	private int sagacity, appetite;
+
+	public Philosopher(ChopStick left, ChopStick right, int id) {
 		this.id = id;
-		this.pileOfSticks = pileOfSticks;	
+		this.left = left;
+		this.right = right;
 		sagacity = r.nextInt(3) + 1;
+		appetite = r.nextInt(3) + 1;
 	}
+
 	public String toString() {
 		return "Philosopher No. " + id + ": ";
 	}
-	
+
 	private void think() throws InterruptedException {
-		TimeUnit.MILLISECONDS.wait(r.nextInt(sagacity * 200));
+		TimeUnit.MILLISECONDS.sleep(r.nextInt(sagacity * 200));
 	}
-	
+
+	private void eat() throws InterruptedException {
+		TimeUnit.MILLISECONDS.sleep(r.nextInt(appetite * 200));
+	}
+
 	public void run() {
-		while (!Thread.interrupted()) {
-			try {
-				System.out.println(this + "thinking . . .");
+		try {
+			while (!Thread.interrupted()) {
+				System.out.println(this + "thinking");
 				think();
-			} catch (InterruptedException e) {
-				e.printStackTrace();
+				left.pickUp();
+				System.out.println(this + "has 1 stick");
+				right.pickUp();
+				System.out.println(this + "has 2 sticks, eating");
+				eat();
+				left.putDown();
+				right.putDown();
 			}
+		} catch (InterruptedException e) {
+			e.printStackTrace();
 		}
 	}
-
 }
-
 
 public class PhilosopherAndChopstickTest {
 
 	public static void main(String[] args) {
-		// TODO Auto-generated method stub
-
+		ExecutorService exec = Executors.newFixedThreadPool(5);
+		// get 5 sticks
+		ChopStick[] sticks = new ChopStick[5];
+		for (int i=0; i < sticks.length; i++) {
+			sticks[i] = new ChopStick();
+		}
+		// feed 5 philosophers
+		for (int i=0; i < sticks.length; i++) {
+			exec.execute(new Philosopher(sticks[i], sticks[i+1], i + 1));
+		}
 	}
 
 }
