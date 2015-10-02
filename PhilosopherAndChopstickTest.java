@@ -1,6 +1,7 @@
 package philosopherAndChopstick;
 
 import java.util.Random;
+import java.util.concurrent.TimeUnit;
 
 class DiningObject {
 	private boolean held;
@@ -25,12 +26,26 @@ class Philosopher implements Runnable {
 	
 	public Philosopher(DiningObject[] pileOfSticks, int id) {
 		this.id = id;
-		this.pileOfSticks = pileOfSticks;
+		this.pileOfSticks = pileOfSticks;	
 		sagacity = r.nextInt(3) + 1;
+	}
+	public String toString() {
+		return "Philosopher No. " + id + ": ";
+	}
+	
+	private void think() throws InterruptedException {
+		TimeUnit.MILLISECONDS.wait(r.nextInt(sagacity * 200));
 	}
 	
 	public void run() {
-		
+		while (!Thread.interrupted()) {
+			try {
+				System.out.println(this + "thinking . . .");
+				think();
+			} catch (InterruptedException e) {
+				e.printStackTrace();
+			}
+		}
 	}
 
 }
