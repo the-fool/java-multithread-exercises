@@ -7,13 +7,12 @@ import java.util.concurrent.TimeUnit;
 
 class ChopStick {
 	private boolean held;
-
+	
 	synchronized void pickUp() throws InterruptedException {
 		while (held)
 			wait();
 		held = true;
 	}
-
 	synchronized void putDown() throws InterruptedException {
 		held = false;
 		notifyAll();
@@ -21,14 +20,17 @@ class ChopStick {
 }
 
 class Philosopher implements Runnable {
+	// constant speed factor alters the rate of the simulation
 	private static final int SPEED_FACTOR = 200;
 	private ChopStick left, right;
 	private int id;
+	// random thinking/eating times
 	private Random r = new Random();
+	// random coefficients making one philosopher with much different proclivities from another 
 	private int sagacity, appetite;
 	// if nourishment hits 0, then philosopher starves to death
 	private volatile int nourishment;
-	ExecutorService exec = Executors.newFixedThreadPool(1);
+	ExecutorService exec; 
 
 	public Philosopher(ChopStick left, ChopStick right, int id) {
 		this.id = id;
@@ -36,7 +38,11 @@ class Philosopher implements Runnable {
 		this.right = right;
 		sagacity = r.nextInt(3) + 1;
 		appetite = r.nextInt(3) + 1;
+		
+		// a separate hunger thread for the philosopher
+		// it ticks down on a timer, and gets incremented when the philosopher eats
 		nourishment = 5;
+		exec = Executors.newFixedThreadPool(1);
 		exec.execute(new Nourishedness());
 	}
 
@@ -62,32 +68,42 @@ class Philosopher implements Runnable {
 				right.pickUp();
 				System.out.println(this + "has 2 sticks, eating");
 				eat();
+				left.putDown();
+				right.putDown();
+				
 				nourishment++;
 				if (nourishment > 0)
 					System.out.println(this + "satisfied level: " + nourishment);
 				else {
-					System.out.println(this + "STARVING!!! My level is " + nourishment);
+					throw new StarvedException(this + "***** STARVED TO DEATH ******");
 				}
-				 
-				left.putDown();
-				right.putDown();
-			}
+			} 
 		} catch (InterruptedException e) {
 			e.printStackTrace();
+		} catch (StarvedException e) {
+			System.out.println(e.getMessage());
 		}
 	}
 	private class Nourishedness implements Runnable {
-		
 		public void run() {
 			try {
 				while (!Thread.interrupted()) {
 					// with multiplicative at 4, it's okay, but at 3, philosophers tend to starve
-				TimeUnit.MILLISECONDS.sleep(SPEED_FACTOR * 4);
+				TimeUnit.MILLISECONDS.sleep(SPEED_FACTOR * 2);
 				nourishment--;
 				}
 			} catch (InterruptedException e) {
 				e.printStackTrace();
 			}
+		}
+	}
+	@SuppressWarnings("serial")
+	private class StarvedException extends RuntimeException {
+		StarvedException() {
+			super();
+		}
+		StarvedException(String message) {
+			super(message);
 		}
 	}
 }
@@ -106,6 +122,9 @@ public class PhilosopherAndChopstickTest {
 		for (int i=0; i < sticks.length - 1; i++) {
 			exec.execute(new Philosopher(sticks[i], sticks[i+1], i + 1));
 		}
+		// possible deadlock UNLESS we switch up the order the philosophers reach for the sticks
+		// if every philosopher reaches for a stick on the left first, 
+		// then a circular deadlock is possible
 		exec.execute(new Philosopher(sticks[0], sticks[sticks.length - 1], sticks.length));
 	}
 
