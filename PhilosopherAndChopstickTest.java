@@ -73,7 +73,7 @@ class Philosopher implements Runnable {
 				
 				nourishment++;
 				if (nourishment > 0)
-					System.out.println(this + "satisfied level: " + nourishment);
+					System.out.println(this + "nourishment level: " + nourishment);
 				else {
 					throw new StarvedException(this + "***** STARVED TO DEATH ******");
 				}
@@ -88,8 +88,9 @@ class Philosopher implements Runnable {
 		public void run() {
 			try {
 				while (!Thread.interrupted()) {
-					// with multiplicative at 4, it's okay, but at 3, philosophers tend to starve
-				TimeUnit.MILLISECONDS.sleep(SPEED_FACTOR * 2);
+			// This sleep quantity is critical for whether philosophers are too hungry to survive
+			// with multiplicative at 4, it's okay, but at 3, philosophers tend to starve
+				TimeUnit.MILLISECONDS.sleep(SPEED_FACTOR * 4);
 				nourishment--;
 				}
 			} catch (InterruptedException e) {
