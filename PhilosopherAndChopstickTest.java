@@ -43,7 +43,7 @@ class Philosopher implements Runnable {
 		// it ticks down on a timer, and gets incremented when the philosopher eats
 		nourishment = 5;
 		exec = Executors.newFixedThreadPool(1);
-		exec.execute(new Nourishedness());
+		exec.execute(new Stomach());
 	}
 
 	public String toString() {
@@ -84,12 +84,12 @@ class Philosopher implements Runnable {
 			System.out.println(e.getMessage());
 		}
 	}
-	private class Nourishedness implements Runnable {
+	private class Stomach implements Runnable {
 		public void run() {
 			try {
 				while (!Thread.interrupted()) {
-			// This sleep quantity is critical for whether philosophers are too hungry to survive
-			// with multiplicative at 4, it's okay, but at 3, philosophers tend to starve
+			// This sleep coefficient is critical for whether philosophers are too hungry to survive.
+			// With multiplicative at 4, it's okay, but at 3, philosophers tend to starve
 				TimeUnit.MILLISECONDS.sleep(SPEED_FACTOR * 4);
 				nourishment--;
 				}
